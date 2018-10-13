@@ -6,6 +6,7 @@ class MongooseModelClass {
   constructor() {
     this.timestamps = true;
     this.mongoosePlugins = [];
+    this.indexUpdatedAtField = false; // helpful for big query (disable by default)
   }
 
   schema() {
@@ -42,6 +43,7 @@ class MongooseModelClass {
 function buildModel(connection, plugins, name, target) {
   const schema = buildSchema(target);
 
+  if (target.timestamps && this.indexUpdatedAtField) schema.index({ 'updated_at': 1 });
   if (plugins.length > 0) plugins.forEach(plugin => schema.plugin(plugin));
 
   return connection.model(name, schema);

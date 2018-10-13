@@ -3,9 +3,12 @@ const _ = require('lodash');
 const Util = require('./util');
 
 class MongooseModelClass {
+  constructor() {
+    this.timestamps = true;
+  }
 
   schema() {
-    throw new Error('The method build must be implemented');
+    throw new Error('The method schema must be implemented');
   }
 
   beforeSave(doc, next) {

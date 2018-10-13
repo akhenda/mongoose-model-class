@@ -1,10 +1,11 @@
-const mongoose = require('mongoose');
 const _ = require('lodash');
+const mongoose = require('mongoose');
 const Util = require('./util');
 
 class MongooseModelClass {
   constructor() {
     this.timestamps = true;
+    this.mongoosePlugins = [];
   }
 
   schema() {
@@ -34,13 +35,15 @@ class MongooseModelClass {
   config(schema) {}
 
   build(connection, name) {
-    return buildModel(connection, name, this);
+    return buildModel(connection, this.mongoosePlugins, name, this);
   }
-
 }
 
-function buildModel(connection, name, target) {
+function buildModel(connection, plugins, name, target) {
   const schema = buildSchema(target);
+
+  if (plugins.length > 0) plugins.forEach(plugin => schema.plugin(plugin));
+
   return connection.model(name, schema);
 }
 

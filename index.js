@@ -1,9 +1,11 @@
+const Joi = require('joi');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const Util = require('./util');
 
 class MongooseModelClass {
   constructor() {
+    this.indexes = [];
     this.timestamps = true;
     this.mongoosePlugins = [];
     this.indexUpdatedAtField = false; // helpful for big query (disable by default)
@@ -38,12 +40,42 @@ class MongooseModelClass {
   build(connection, name) {
     return buildModel(connection, this.mongoosePlugins, name, this);
   }
+
+  getIndexes() {
+    const indices = [];
+
+    if (this.timestamps && this.indexUpdatedAtField) {
+      indices.push([{ updated_at: 1 }, { unique: false }]);
+    }
+
+    const indicesSchema = Joi.array().items(
+      Joi.object().keys({
+        fields: Joi.object().required(),
+        unique: Joi.boolean(),
+      }),
+    ).unique();
+
+    const validation = Joi.validate(this.indexes, indicesSchema);
+
+    if (validation.error) {
+      console.log(validation);
+      throw validation.error;
+    }
+
+    this.indexes.forEach((index) => {
+      indices.push([index.fields, { unique: index.unique || false }]);
+    });
+
+    return indices;
+  }
 }
 
 function buildModel(connection, plugins, name, target) {
   const schema = buildSchema(target);
 
-  if (target.timestamps && this.indexUpdatedAtField) schema.index({ 'updated_at': 1 });
+  if (target.indexes.length > 0) {
+    target.getIndexes().forEach(index => schema.index(index[0], index[1]));
+  }
   if (plugins.length > 0) plugins.forEach(plugin => schema.plugin(plugin));
 
   return connection.model(name, schema);

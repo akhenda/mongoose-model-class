@@ -21,6 +21,7 @@
   "author": "Ernesto Rojas <ernesto20145@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "joi": "^14.0.0",
     "lodash": "^4.17.10",
     "mongoose": "^5.1.2"
   },

@@ -50,7 +50,7 @@ class MongooseModelClass {
 
     const indicesSchema = Joi.array().items(
       Joi.object().keys({
-        fields: Joi.object().required(),
+        field: Joi.object().required(),
         unique: Joi.boolean(),
       }),
     ).unique();
@@ -63,7 +63,7 @@ class MongooseModelClass {
     }
 
     this.indexes.forEach((index) => {
-      indices.push([index.fields, { unique: index.unique || false }]);
+      indices.push([index.field, { unique: index.unique || false }]);
     });
 
     return indices;
@@ -73,7 +73,7 @@ class MongooseModelClass {
 function buildModel(connection, plugins, name, target) {
   const schema = buildSchema(target);
 
-  if (target.indexes.length > 0) {
+  if (target.getIndexes().length > 0) {
     target.getIndexes().forEach(index => schema.index(index[0], index[1]));
   }
   if (plugins.length > 0) plugins.forEach(plugin => schema.plugin(plugin));

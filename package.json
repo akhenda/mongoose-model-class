@@ -23,7 +23,7 @@
   "dependencies": {
     "joi": "^14.0.0",
     "lodash": "^4.17.10",
-    "mongoose": "^5.1.2"
+    "mongoose": "^5.3.4"
   },
   "devDependencies": {
     "mocha": "^5.2.0",

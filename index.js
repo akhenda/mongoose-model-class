@@ -23,6 +23,22 @@ class MongooseModelClass {
     next();
   }
 
+  beforeUpdate(doc, next) {
+    next();
+  }
+
+  afterUpdate(doc, next) {
+    next();
+  }
+
+  beforeFindOneAndUpdate(doc, next) {
+    next();
+  }
+
+  afterFindOneAndUpdate(doc, next) {
+    next();
+  }
+
   beforeRemove(doc, next) {
     next();
   }
@@ -136,6 +152,18 @@ function setLifeCycleCallbacks(target, schema) {
   })
   schema.post('save', async function(doc, next) {
     await target.afterSave(doc, next);
+  })
+  schema.pre('update', async function(next) {
+    await target.beforeUpdate(this, next);
+  })
+  schema.post('update', async function(doc, next) {
+    await target.afterUpdate(doc, next);
+  })
+  schema.pre('findOneAndUpdate', async function(next) {
+    await target.beforeFindOneAndUpdate(this, next);
+  })
+  schema.post('findOneAndUpdate', async function(doc, next) {
+    await target.afterFindOneAndUpdate(doc, next);
   })
   schema.pre('remove', async function(next) {
     await target.beforeRemove(this, next);

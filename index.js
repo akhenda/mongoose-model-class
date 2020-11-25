@@ -71,7 +71,7 @@ class MongooseModelClass {
       }),
     ).unique();
 
-    const validation = Joi.validate(this.indexes, indicesSchema);
+    const validation = indicesSchema.validate(this.indexes);
 
     if (validation.error) {
       console.log(validation);

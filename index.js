@@ -1,5 +1,6 @@
 const Joi = require('joi');
-const _ = require('lodash');
+const map = require('lodash/map');
+const has = require('lodash/has');
 const mongoose = require('mongoose');
 const Util = require('./util');
 
@@ -94,7 +95,7 @@ function buildModel(connection, plugins, name, target) {
   }
   if (plugins.length > 0) plugins.forEach(plugin => schema.plugin(plugin));
 
-  return connection.model(name, schema);
+  return connection.model(name, schema, target.options().collection);
 }
 
 function buildSchema(target) {
@@ -110,7 +111,7 @@ function buildSchema(target) {
 function setStaticMethods(target, schema) {
   const o = target.constructor;
   const properties = Object.getOwnPropertyNames(o)
-  _.map(properties, name => {
+  map(properties, name => {
     const method = Object.getOwnPropertyDescriptor(o, name);
     if (Util.isStaticMethod(name, method)) {
       schema.statics[name] = method.value;
@@ -121,7 +122,7 @@ function setStaticMethods(target, schema) {
 function setInstanceMethods(target, schema) {
   const o = target.constructor.prototype;
   const properties = Object.getOwnPropertyNames(o)
-  _.map(properties, name => {
+  map(properties, name => {
     const method = Object.getOwnPropertyDescriptor(o, name)
     if (Util.isInstanceMethod(name, method)) {
       schema.method(name, method.value);
@@ -132,14 +133,14 @@ function setInstanceMethods(target, schema) {
 function setVirtualMethods(target, schema) {
   const o = target.constructor.prototype;
   const properties = Object.getOwnPropertyNames(o);
-  _.map(properties, name => {
+  map(properties, name => {
     const method = Object.getOwnPropertyDescriptor(o, name);
     if (Util.isVirtualMethod(name, method)) {
       const v = schema.virtual(name);
-      if (_.has(method, 'set')) {
+      if (has(method, 'set')) {
         v.set(method.set);
       }
-      if (_.has(method, 'get')) {
+      if (has(method, 'get')) {
         v.get(method.get);
       }
     }

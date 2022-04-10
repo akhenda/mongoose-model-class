@@ -8,7 +8,7 @@ describe('Mongoose Model Class tests', () => {
 
   it('Should build model', () => {
     const uri = 'mongodb://localhost/mongoose-model-class';
-    mongoose.connect(uri, { promiseLibrary: global.Promise });
+    mongoose.connect(uri, {});
     modelUser = classUser.build(mongoose, 'User');
   });
 
@@ -78,7 +78,7 @@ describe('Mongoose Model Class tests', () => {
       }
 
       disable() {
-        return this.model('User').update({ _id: this.id }, { $set: { status: false } });
+        return this.model('User').updateOne({ _id: this.id }, { $set: { status: false } });
       }
 
     }
@@ -88,7 +88,7 @@ describe('Mongoose Model Class tests', () => {
   })
 
   after(async () => {
-    await modelUser.remove({});
+    await modelUser.deleteOne({});
   })
 
 });

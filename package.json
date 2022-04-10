@@ -1,6 +1,6 @@
 {
   "name": "mongoose-model-class",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "This module converts a class to a mongoose model.",
   "main": "index.js",
   "scripts": {
@@ -24,12 +24,12 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "joi": "^17.4.2",
-    "lodash": "^4.17.21",
-    "mongoose": "^5.13.9"
+    "joi": "17.6.0",
+    "lodash": "4.17.21",
+    "mongoose": "6.2.10"
   },
   "devDependencies": {
-    "mocha": "^9.1.2",
-    "sha1": "^1.1.1"
+    "mocha": "9.2.2",
+    "sha1": "1.1.1"
   }
 }

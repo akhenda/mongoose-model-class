@@ -1,7 +1,6 @@
 const has = require('lodash/has');
 
 class Util {
-  
   static isInstanceMethod(name, method) {
     return (name !== 'constructor' && name != 'schema' && !(method.set || method.get));
   }

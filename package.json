@@ -26,10 +26,10 @@
   "dependencies": {
     "joi": "17.6.0",
     "lodash": "4.17.21",
-    "mongoose": "6.2.10"
+    "mongoose": "6.5.2"
   },
   "devDependencies": {
-    "mocha": "9.2.2",
+    "mocha": "10.0.0",
     "sha1": "1.1.1"
   }
 }

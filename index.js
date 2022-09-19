@@ -32,11 +32,59 @@ class MongooseModelClass {
     next();
   }
 
+  beforeFind(doc, next) {
+    next();
+  }
+
+  afterFind(doc, next) {
+    next();
+  }
+
+  beforeFindOne(doc, next) {
+    next();
+  }
+
+  afterFindOne(doc, next) {
+    next();
+  }
+
+  beforeFindOneAndDelete(doc, next) {
+    next();
+  }
+
+  afterFindOneAndDelete(doc, next) {
+    next();
+  }
+
+  beforeFindOneAndRemove(doc, next) {
+    next();
+  }
+
+  afterFindOneAndRemove(doc, next) {
+    next();
+  }
+
+  beforeFindOneAndReplace(doc, next) {
+    next();
+  }
+
+  afterFindOneAndReplace(doc, next) {
+    next();
+  }
+
   beforeFindOneAndUpdate(doc, next) {
     next();
   }
 
   afterFindOneAndUpdate(doc, next) {
+    next();
+  }
+
+  beforeAllFinds(doc, next) {
+    next();
+  }
+
+  afterAllFinds(doc, next) {
     next();
   }
 
@@ -160,6 +208,36 @@ function setLifeCycleCallbacks(target, schema) {
   schema.post('update', async function(doc, next) {
     await target.afterUpdate(doc, next);
   })
+  schema.pre('find', async function(next) {
+    await target.beforeFind(this, next);
+  })
+  schema.post('find', async function(doc, next) {
+    await target.afterFind(doc, next);
+  })
+  schema.pre('findOne', async function(next) {
+    await target.beforeFindOne(this, next);
+  })
+  schema.post('findOne', async function(doc, next) {
+    await target.afterFindOne(doc, next);
+  })
+  schema.pre('findOneAndDelete', async function(next) {
+    await target.beforeFindOneAndDelete(this, next);
+  })
+  schema.post('findOneAndDelete', async function(doc, next) {
+    await target.afterFindOneAndDelete(doc, next);
+  })
+  schema.pre('findOneAndRemove', async function(next) {
+    await target.beforeFindOneAndRemove(this, next);
+  })
+  schema.post('findOneAndRemove', async function(doc, next) {
+    await target.afterFindOneAndRemove(doc, next);
+  })
+  schema.pre('findOneAndReplace', async function(next) {
+    await target.beforeFindOneAndReplace(this, next);
+  })
+  schema.post('findOneAndReplace', async function(doc, next) {
+    await target.afterFindOneAndReplace(doc, next);
+  })
   schema.pre('findOneAndUpdate', async function(next) {
     await target.beforeFindOneAndUpdate(this, next);
   })
@@ -172,6 +250,18 @@ function setLifeCycleCallbacks(target, schema) {
   schema.post('remove', async function(doc, next) {
     await target.afterRemove(doc, next);
   })
+
+  if (target.beforeAllFinds) {
+    schema.pre(/^find/, async function(next) {
+      await target.beforeAllFinds(this, next);
+    })
+  }
+
+  if (target.afterAllFinds) {
+    schema.post(/^find/, async function(doc, next) {
+      await target.afterAllFinds(doc, next);
+    })
+  }
 }
 
 Object.defineProperty(MongooseModelClass, 'adapter', {

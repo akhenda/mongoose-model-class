@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 const sha1 = require('sha1');
+
 const MongooseModelClass = require('../index');
 
 describe('Mongoose Model Class tests', () => {
-
   let classUser, modelUser, docUser;
 
   it('Should build model', () => {
     const uri = 'mongodb://localhost/mongoose-model-class';
+
     mongoose.connect(uri, {});
     modelUser = classUser.build(mongoose, 'User');
   });
@@ -21,6 +22,7 @@ describe('Mongoose Model Class tests', () => {
       username: 'ernestojr',
       password: '20145',
     });
+
     if (!(docUser.password === sha1('20145'))) {
       throw new Error('Password is not convert to sha1');
     }
@@ -56,6 +58,7 @@ describe('Mongoose Model Class tests', () => {
 
       beforeSave(doc, next) {
         doc.password = sha1(doc.password);
+
         next();
       }
 
@@ -71,24 +74,21 @@ describe('Mongoose Model Class tests', () => {
 
       static async getById(id) {
         const user = await this.findById(id);
-        if (!user) {
-          throw new Error('User not found.');
-        }
+
+        if (!user) throw new Error('User not found.');
+
         return user;
       }
 
       disable() {
         return this.model('User').updateOne({ _id: this.id }, { $set: { status: false } });
       }
-
     }
 
     classUser = new User();
-
   })
 
   after(async () => {
     await modelUser.deleteOne({});
   })
-
 });

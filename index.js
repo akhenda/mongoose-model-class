@@ -96,6 +96,14 @@ class MongooseModelClass {
     next();
   }
 
+  beforeAggregate() {
+    // pass
+  }
+
+  afterAggregate() {
+    // pass
+  }
+
   options() {
     return {};
   }
@@ -249,6 +257,14 @@ function setLifeCycleCallbacks(target, schema) {
   })
   schema.post('remove', async function(doc, next) {
     await target.afterRemove(doc, next);
+  })
+  schema.pre('aggregate', async function() {
+    const stage = await target.beforeAggregate();
+
+    if (stage) this.pipeline().unshift(stage);
+  })
+  schema.post('aggregate', async function() {
+    await target.afterAggregate();
   })
 
   if (target.beforeAllFinds) {

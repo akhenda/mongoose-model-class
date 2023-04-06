@@ -13,6 +13,9 @@ class User extends __1.default {
             throw new Error('User not found.');
         return user;
     }
+    options() {
+        return {};
+    }
     schema() {
         return {
             email: { required: true, type: String },

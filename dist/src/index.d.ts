@@ -11,8 +11,8 @@ declare abstract class MongooseModelClass<DerivedClassConstructor> {
     builtSchema: Schema<ObtainDocumentType<ReturnType<this['schema']>>>;
     constructor();
     abstract schema(): any;
-    protected config<DocType, IModel, Methods, Virtuals, Statics, TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>>(schema: TSchema): void;
-    options<DocType, Methods, Virtuals, Statics>(): SchemaOptions<DefaultTypeKey, DocType, Methods, object, Statics, Virtuals>;
+    config<DocType, IModel, Methods, Virtuals, Statics, TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>>(schema: TSchema): void;
+    abstract options<DocType, Methods, Virtuals, Statics>(): SchemaOptions<DefaultTypeKey, DocType, Methods, object, Statics, Virtuals>;
     pipeline(): PipelineStage[];
     beforeSave(_: any, next: CallbackWithoutResultAndOptionalError): void;
     afterSave(_: any, next: CallbackWithoutResultAndOptionalError): void;

@@ -37,27 +37,26 @@ abstract class MongooseModelClass<DerivedClassConstructor> {
 
   abstract schema();
 
-  protected config<
+  config<
     DocType,
     IModel,
     Methods,
     Virtuals,
     Statics,
     TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-  >(schema: TSchema): void {
-    console.info('Implement config', schema.path);
-  }
+    /* eslint-disable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
+    // @ts-ignore
+  >(schema: TSchema): void {}
+  /* eslint-enable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
 
-  options<DocType, Methods, Virtuals, Statics>(): SchemaOptions<
+  abstract options<DocType, Methods, Virtuals, Statics>(): SchemaOptions<
     DefaultTypeKey,
     DocType,
     Methods,
     object,
     Statics,
     Virtuals
-  > {
-    return {};
-  }
+  >;
 
   pipeline(): PipelineStage[] {
     return [];

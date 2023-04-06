@@ -12,6 +12,10 @@ export class User extends MongooseModelClass<typeof User> {
     return user;
   }
 
+  options() {
+    return {};
+  }
+
   schema() {
     return {
       email: { required: true, type: String },

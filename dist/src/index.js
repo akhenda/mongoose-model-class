@@ -41,12 +41,7 @@ class MongooseModelClass {
         this.mongoosePlugins = [];
         this.builtSchema = new mongoose_1.Schema(this.schema());
     }
-    config(schema) {
-        console.info('Implement config', schema.path);
-    }
-    options() {
-        return {};
-    }
+    config(schema) { }
     pipeline() {
         return [];
     }

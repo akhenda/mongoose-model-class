@@ -38,6 +38,7 @@ export declare class User extends MongooseModelClass<typeof User> {
     } & {
         _id: import("mongoose").Types.ObjectId;
     }>;
+    options(): {};
     schema(): {
         email: {
             required: boolean;

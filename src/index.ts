@@ -6,20 +6,171 @@ import mongoose, {
   IndexDefinition,
   IndexOptions,
   Mongoose,
-  ObtainDocumentType,
   PipelineStage,
   Schema,
-  SchemaDefinition,
-  SchemaDefinitionType,
   SchemaOptions,
 } from 'mongoose';
 
-import { MongooseModelClassExtractMethods, MongooseModelClassModel, MongooseModelClassReturnModelType } from './types';
+import { DerivedClassDocument, DerivedClassMethods, DerivedClassModel, MongoosePlugin } from './types';
 import Util from './util';
 
-abstract class MongooseModelClass<DerivedClassConstructor> {
-  protected timestamps = true;
+function setStaticMethods<TSchema extends Schema, DerivedClass extends MongooseModelClass>(
+  target: DerivedClass,
+  schema: TSchema,
+) {
+  const o = target.constructor;
+  const properties = Object.getOwnPropertyNames(o);
 
+  properties.forEach((name) => {
+    const method = Object.getOwnPropertyDescriptor(o, name);
+
+    if (method && Util.isStaticMethod(name)) schema.static(name, method.value);
+  });
+}
+
+function setInstanceMethods<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
+  const o = target.constructor.prototype;
+  const properties = Object.getOwnPropertyNames(o);
+
+  properties.forEach((name) => {
+    const method = Object.getOwnPropertyDescriptor(o, name);
+
+    if (method && Util.isInstanceMethod(name, method)) schema.method(name, method.value);
+  });
+}
+
+function setVirtualMethods<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
+  const o = target.constructor.prototype;
+  const properties = Object.getOwnPropertyNames(o);
+
+  properties.forEach((name) => {
+    const method = Object.getOwnPropertyDescriptor(o, name);
+
+    if (method && Util.isVirtualMethod(name, method)) {
+      const v = schema.virtual(name);
+
+      if (has(method, 'set') && method.set) v.set(method.set);
+      if (has(method, 'get') && method.get) v.get(method.get);
+    }
+  });
+}
+
+function setLifeCycleCallbacks<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
+  schema.pre('save', async function (next) {
+    await target.beforeSave(this, next);
+  });
+  schema.post('save', async function (doc, next) {
+    await target.afterSave(doc, next);
+  });
+  schema.pre('update', async function (next) {
+    await target.beforeUpdate(this, next);
+  });
+  schema.post('update', async function (doc, next) {
+    await target.afterUpdate(doc, next);
+  });
+  schema.pre('find', async function (next) {
+    await target.beforeFind(this, next);
+  });
+  schema.post('find', async function (doc, next) {
+    await target.afterFind(doc, next);
+  });
+  schema.pre('findOne', async function (next) {
+    await target.beforeFindOne(this, next);
+  });
+  schema.post('findOne', async function (doc, next) {
+    await target.afterFindOne(doc, next);
+  });
+  schema.pre('findOneAndDelete', async function (next) {
+    await target.beforeFindOneAndDelete(this, next);
+  });
+  schema.post('findOneAndDelete', async function (doc, next) {
+    await target.afterFindOneAndDelete(doc, next);
+  });
+  schema.pre('findOneAndRemove', async function (next) {
+    await target.beforeFindOneAndRemove(this, next);
+  });
+  schema.post('findOneAndRemove', async function (doc, next) {
+    await target.afterFindOneAndRemove(doc, next);
+  });
+  schema.pre('findOneAndReplace', async function (next) {
+    await target.beforeFindOneAndReplace(this, next);
+  });
+  schema.post('findOneAndReplace', async function (doc, next) {
+    await target.afterFindOneAndReplace(doc, next);
+  });
+  schema.pre('findOneAndUpdate', async function (next) {
+    await target.beforeFindOneAndUpdate(this, next);
+  });
+  schema.post('findOneAndUpdate', async function (doc, next) {
+    await target.afterFindOneAndUpdate(doc, next);
+  });
+  schema.pre('remove', async function (next) {
+    await target.beforeRemove(this, next);
+  });
+  schema.post('remove', async function (doc, next) {
+    await target.afterRemove(doc, next);
+  });
+  schema.pre('aggregate', async function () {
+    const stage = await target.beforeAggregate();
+
+    if (stage) this.pipeline().unshift(stage);
+  });
+  schema.post('aggregate', async function () {
+    await target.afterAggregate();
+  });
+
+  if (target.beforeAllFinds) {
+    schema.pre(/^find/, async function (next) {
+      await target.beforeAllFinds(this, next);
+    });
+  }
+
+  if (target.afterAllFinds) {
+    schema.post(/^find/, async function (doc, next) {
+      await target.afterAllFinds(doc, next);
+    });
+  }
+}
+
+function buildSchema<DerivedClass extends MongooseModelClass>(target: DerivedClass) {
+  const schema = target.schema();
+
+  setStaticMethods<typeof schema, DerivedClass>(target, schema);
+  setInstanceMethods(target, schema);
+  setVirtualMethods(target, schema);
+  setLifeCycleCallbacks(target, schema);
+
+  target.config(schema);
+
+  return schema;
+}
+
+function buildModel<DerivedClassConstructor, DerivedClass extends MongooseModelClass>(
+  connection: Mongoose,
+  plugins: MongoosePlugin[],
+  name: string,
+  target: DerivedClass,
+) {
+  const schema = buildSchema<DerivedClass>(target) as unknown as Schema<
+    DerivedClassDocument<DerivedClass>,
+    DerivedClassModel<DerivedClass, DerivedClassConstructor>,
+    DerivedClassMethods<DerivedClass>
+  >;
+
+  if (target.getIndexes().length > 0) {
+    target.getIndexes().forEach((index) => schema.index(index[0], index[1]));
+  }
+
+  if (plugins.length > 0) plugins.forEach((plugin) => schema.plugin(plugin as any));
+
+  return connection.model<DerivedClassDocument<DerivedClass>, DerivedClassModel<DerivedClass, DerivedClassConstructor>>(
+    name,
+    schema,
+    target.options().collection,
+  );
+}
+
+abstract class MongooseModelClass {
   protected indexUpdatedAtField = false;
 
   protected indexes: {
@@ -27,118 +178,87 @@ abstract class MongooseModelClass<DerivedClassConstructor> {
     unique: boolean;
   }[] = [];
 
-  protected mongoosePlugins: unknown[] = [];
-
-  public builtSchema: Schema<ObtainDocumentType<ReturnType<this['schema']>>>;
-
-  constructor() {
-    this.builtSchema = new Schema<ObtainDocumentType<ReturnType<this['schema']>>>(this.schema());
-  }
+  protected mongoosePlugins: MongoosePlugin[] = [];
 
   abstract schema();
 
-  config<
-    DocType,
-    IModel,
-    Methods,
-    Virtuals,
-    Statics,
-    TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-    /* eslint-disable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
-    // @ts-ignore
-  >(schema: TSchema): void {}
-  /* eslint-enable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
-
-  abstract options<DocType, Methods, Virtuals, Statics>(): SchemaOptions<
-    DefaultTypeKey,
-    DocType,
-    Methods,
-    object,
-    Statics,
-    Virtuals
-  >;
-
-  pipeline(): PipelineStage[] {
-    return [];
-  }
-
-  beforeSave(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeSave(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterSave(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterSave(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeUpdate(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeUpdate(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterUpdate(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterUpdate(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFind(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFind(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFind(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFind(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFindOne(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFindOne(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFindOne(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFindOne(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFindOneAndDelete(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFindOneAndDelete(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFindOneAndDelete(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFindOneAndDelete(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFindOneAndRemove(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFindOneAndRemove(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFindOneAndRemove(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFindOneAndRemove(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFindOneAndReplace(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFindOneAndReplace(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFindOneAndReplace(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFindOneAndReplace(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeFindOneAndUpdate(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeFindOneAndUpdate(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterFindOneAndUpdate(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterFindOneAndUpdate(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeAllFinds(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeAllFinds(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterAllFinds(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterAllFinds(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  beforeRemove(_: any, next: CallbackWithoutResultAndOptionalError) {
+  beforeRemove(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
-  afterRemove(_: any, next: CallbackWithoutResultAndOptionalError) {
+  afterRemove(_: unknown, next: CallbackWithoutResultAndOptionalError) {
     next();
   }
 
@@ -146,179 +266,17 @@ abstract class MongooseModelClass<DerivedClassConstructor> {
 
   afterAggregate() {}
 
-  setStaticMethods<
-    DocType,
-    IModel,
-    Methods,
-    Virtuals,
-    Statics,
-    TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-  >(schema: TSchema) {
-    const o = this.constructor;
-    const properties = Object.getOwnPropertyNames(o);
+  abstract options(): SchemaOptions<DefaultTypeKey>;
 
-    properties.forEach((name) => {
-      const method = Object.getOwnPropertyDescriptor(o, name);
-
-      if (method && Util.isStaticMethod(name)) schema.static(name, method.value);
-    });
-
-    return Object.entries(schema.statics).reduce((result, [name, method]) => {
-      return { ...result, [name]: method };
-    }, {} as MongooseModelClassExtractMethods<DerivedClassConstructor>);
-  }
-
-  setInstanceMethods<
-    DocType,
-    IModel,
-    Methods,
-    Virtuals,
-    Statics,
-    TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-  >(schema: TSchema) {
-    const o = this.constructor.prototype;
-    const properties = Object.getOwnPropertyNames(o);
-
-    properties.forEach((name) => {
-      const method = Object.getOwnPropertyDescriptor(o, name);
-
-      if (method && Util.isInstanceMethod(name, method)) schema.method(name, method.value);
-    });
-
-    return Object.entries(schema.methods).reduce((result, [name, method]) => {
-      return { ...result, [name]: method };
-    }, {} as MongooseModelClassExtractMethods<this>);
-  }
-
-  setVirtualMethods<
-    DocType,
-    IModel,
-    Methods,
-    Virtuals,
-    Statics,
-    TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-  >(schema: TSchema) {
-    const o = this.constructor.prototype;
-    const properties = Object.getOwnPropertyNames(o);
-
-    properties.forEach((name) => {
-      const method = Object.getOwnPropertyDescriptor(o, name);
-
-      if (method && Util.isVirtualMethod(name, method)) {
-        const v = schema.virtual(name);
-
-        // @ts-ignore
-        if (has(method, 'set')) v.set(method.set);
-        // @ts-ignore
-        if (has(method, 'get')) v.get(method.get);
-      }
-    });
-
-    return schema.virtuals;
-  }
-
-  protected setLifeCycleCallbacks<
-    DocType,
-    IModel,
-    Methods,
-    Virtuals,
-    Statics,
-    TSchema extends Schema<DocType, IModel, Methods, object, Virtuals, Statics>,
-  >(schema: TSchema) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-
-    schema.pre('save', async function (next) {
-      await self.beforeSave(this, next);
-    });
-    schema.post('save', async function (doc, next) {
-      await self.afterSave(doc, next);
-    });
-
-    schema.pre('update', async function (next) {
-      await self.beforeUpdate(this, next);
-    });
-    schema.post('update', async function (doc, next) {
-      await self.afterUpdate(doc, next);
-    });
-
-    schema.pre('find', async function (next) {
-      await self.beforeFind(this, next);
-    });
-    schema.post('find', async function (doc, next) {
-      await self.afterFind(doc, next);
-    });
-
-    schema.pre('findOne', async function (next) {
-      await self.beforeFindOne(this, next);
-    });
-    schema.post('findOne', async function (doc, next) {
-      await self.afterFindOne(doc, next);
-    });
-
-    schema.pre('findOneAndDelete', async function (next) {
-      await self.beforeFindOneAndDelete(this, next);
-    });
-    schema.post('findOneAndDelete', async function (doc, next) {
-      await self.afterFindOneAndDelete(doc, next);
-    });
-
-    schema.pre('findOneAndRemove', async function (next) {
-      await self.beforeFindOneAndRemove(this, next);
-    });
-    schema.post('findOneAndRemove', async function (doc, next) {
-      await self.afterFindOneAndRemove(doc, next);
-    });
-
-    schema.pre('findOneAndReplace', async function (next) {
-      await self.beforeFindOneAndReplace(this, next);
-    });
-    schema.post('findOneAndReplace', async function (doc, next) {
-      await self.afterFindOneAndReplace(doc, next);
-    });
-
-    schema.pre('findOneAndUpdate', async function (next) {
-      await self.beforeFindOneAndUpdate(this, next);
-    });
-    schema.post('findOneAndUpdate', async function (doc, next) {
-      await self.afterFindOneAndUpdate(doc, next);
-    });
-
-    schema.pre('remove', async function (next) {
-      await self.beforeRemove(this, next);
-    });
-    schema.post('remove', async function (doc, next) {
-      await self.afterRemove(doc, next);
-    });
-
-    schema.pre('aggregate', async function () {
-      const stage = await self.beforeAggregate();
-
-      if (stage) this.pipeline().unshift(stage);
-    });
-    schema.post('aggregate', async function () {
-      await self.afterAggregate();
-    });
-
-    if (self.beforeAllFinds) {
-      schema.pre(/^find/, async function (next) {
-        await self.beforeAllFinds(this, next);
-      });
-    }
-
-    if (self.afterAllFinds) {
-      schema.post(/^find/, async function (doc, next) {
-        await self.afterAllFinds(doc, next);
-      });
-    }
-
-    return schema;
-  }
+  /* eslint-disable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
+  // @ts-ignore
+  config(schema: Schema): void {}
+  /* eslint-enable @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars */
 
   getIndexes() {
     const indices: [IndexDefinition, IndexOptions][] = [];
 
-    if (this.timestamps && this.indexUpdatedAtField) {
+    if (this.options().timestamps && this.indexUpdatedAtField) {
       indices.push([{ updated_at: 1 }, { unique: false }]);
     }
 
@@ -342,36 +300,8 @@ abstract class MongooseModelClass<DerivedClassConstructor> {
     return indices;
   }
 
-  buildModel<
-    T extends DocType | SchemaDefinition<SchemaDefinitionType<unknown>> | undefined = ReturnType<this['schema']>,
-    DocType extends ObtainDocumentType<unknown> = ObtainDocumentType<T>,
-    Methods = ReturnType<this['setInstanceMethods']>,
-    Statics = ReturnType<this['setStaticMethods']>,
-    Virtuals = ReturnType<this['setVirtualMethods']>,
-    TModel = MongooseModelClassModel<DocType, Methods, Virtuals, Statics>,
-  >(connection: Mongoose, plugins: any[], name: string) {
-    const definition = this.schema() as T;
-    const schema = new Schema<DocType, TModel, Methods, object, Virtuals, Statics>(definition, this.options());
-
-    this.setStaticMethods<DocType, TModel, Methods, Virtuals, Statics, typeof schema>(schema);
-    this.setInstanceMethods<DocType, TModel, Methods, Virtuals, Statics, typeof schema>(schema);
-    this.setVirtualMethods<DocType, TModel, Methods, Virtuals, Statics, typeof schema>(schema);
-    this.setLifeCycleCallbacks<DocType, TModel, Methods, Virtuals, Statics, typeof schema>(schema);
-    this.config<DocType, TModel, Methods, Virtuals, Statics, typeof schema>(schema);
-
-    if (this.getIndexes().length > 0) this.getIndexes().forEach((index) => schema.index(index[0], index[1]));
-
-    if (plugins.length > 0) plugins.forEach((plugin) => schema.plugin(plugin));
-
-    const model = connection.model<DocType, TModel>(name, schema, this.options().collection);
-
-    this.builtSchema = schema as unknown as Schema<ObtainDocumentType<ReturnType<this['schema']>>>;
-
-    return model as typeof model & MongooseModelClassReturnModelType<typeof this, object, Virtuals, Statics>;
-  }
-
-  build(connection: Mongoose = mongoose, name: string = this.constructor.name) {
-    return this.buildModel(connection, this.mongoosePlugins, name);
+  build<DerivedClassConstructor>(connection: Mongoose = mongoose, name = this.constructor.name) {
+    return buildModel<DerivedClassConstructor, typeof this>(connection, this.mongoosePlugins, name, this);
   }
 }
 
@@ -381,12 +311,12 @@ Object.defineProperty(MongooseModelClass, 'adapter', {
 });
 
 Object.defineProperty(MongooseModelClass, 'Schema', {
-  value: mongoose.Schema,
+  value: Schema,
   writable: false,
 });
 
 Object.defineProperty(MongooseModelClass, 'types', {
-  value: mongoose.Schema.Types,
+  value: Schema.Types,
   writable: false,
 });
 

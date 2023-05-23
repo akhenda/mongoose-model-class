@@ -4,11 +4,14 @@ import { dropCollections, dropDatabase, setUp } from './db';
 import { User } from './User';
 
 const userData = {
+  dob: new Date('2022-07-02'),
   email: 'taya@gmail.com',
   firstName: 'Taya',
+  isOnline: true,
   lastName: 'Akhenda',
   password: 'Taya2022',
   phone: '+254 01010101',
+  status: 'ready',
   username: 'taya',
 };
 
@@ -26,7 +29,7 @@ afterAll(async () => {
 
 describe('Mongoose Model Class Extended Tests', () => {
   const Model = new User();
-  const UserModel = Model.build(mongoose, 'User');
+  const UserModel = Model.build<typeof User>(mongoose, 'User');
 
   describe('Creating records', () => {
     it('saves a user', async () => {

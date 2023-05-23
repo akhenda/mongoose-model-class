@@ -3,15 +3,15 @@ import {
   HydratedDocument,
   InferSchemaType,
   Model,
+  Mongoose,
   ObtainDocumentType,
   ObtainSchemaGeneric,
   Schema,
 } from 'mongoose';
 
-export type MongooseModelClassPickMatching<T, V> = { [K in keyof T as T[K] extends V ? K : never]: T[K] };
-export type MongooseModelClassExtractMethods<T> = MongooseModelClassPickMatching<T, Function>;
-export type MongooseModelClassModel<DocType, Methods, Virtuals, Statics> = Model<DocType, object, Methods, Virtuals> &
-  Statics;
+export type MongoosePlugin = Mongoose['plugin'];
+export type PickMatching<T, V> = { [K in keyof T as T[K] extends V ? K : never]: T[K] };
+export type ExtractMethods<T> = PickMatching<T, Function>;
 
 /**
  * This type is for lint error "ban-types" where "{}" would be used
@@ -20,51 +20,39 @@ export type MongooseModelClassModel<DocType, Methods, Virtuals, Statics> = Model
 export type BeAnObject = Record<string, any>;
 
 /**
- * Any-param Constructor
- */
-export type AnyParamConstructor<T> = new (...args: any) => T & {
-  options: Record<string, unknown>;
-};
-
-/**
  * Get the Type of an instance of a Document with Class properties
  * @example
  * ```ts
  * class ClassName {}
  * const NameModel = new ClassName().build();
  *
- * const doc: MongooseModelClassDocumentType<ClassName> = await NameModel.create({});
+ * const doc: DocumentType<ClassName> = await NameModel.create({});
  * ```
  */
-export type MongooseModelClassDocumentType<T extends { builtSchema: any }, QueryHelpers = BeAnObject> = Document<
-  any,
-  QueryHelpers
-> &
-  InferSchemaType<T['builtSchema']>;
+export type DocumentType<T extends { schema: any }, QueryHelpers = BeAnObject> = Document<any, QueryHelpers> &
+  InferSchemaType<ReturnType<T['schema']>>;
 
 /**
  * Used Internally for ModelTypes
  */
-export type MongooseModelClassModelType<
-  T extends { builtSchema: any },
+export type ModelType<
+  T extends { schema: any },
   QueryHelpers = BeAnObject,
   Statics = BeAnObject,
   Virtuals = BeAnObject,
-> = Model<MongooseModelClassDocumentType<T, QueryHelpers>, QueryHelpers, object, Virtuals, Statics>;
+> = Model<DocumentType<T, QueryHelpers>, QueryHelpers, object, Virtuals, Statics>;
 
 /**
  * The Type for Models used in typegoose, mostly returned by "getModelForClass" and "addModelToTypegoose"
  * @example
- * const Model: MongooseModelClassReturnModelType<YourClass, YourClassQueryHelper> = mongoose.model("YourClass", YourClassSchema);
+ * const Model: ReturnModelType<YourClass, YourClassQueryHelper> = mongoose.model("YourClass", YourClassSchema);
  */
-export type MongooseModelClassReturnModelType<
-  ModelClass extends { builtSchema: any },
+export type ReturnModelType<
+  T extends { schema: any },
   QueryHelpers = BeAnObject,
   Virtuals = BeAnObject,
   Statics = BeAnObject,
-> = MongooseModelClassModelType<ModelClass, QueryHelpers, Virtuals, Statics> & ModelClass;
-
-export type DerivedConstructorFromInstanceType<T> = abstract new () => T;
+> = ModelType<T, QueryHelpers, Virtuals, Statics> & T;
 
 export type HydratedDocumentFromSchema<TSchema extends Schema> = HydratedDocument<
   InferSchemaType<TSchema>,
@@ -77,3 +65,23 @@ export type HydratedDocumentInHook<DocType, Methods = BeAnObject> = HydratedDocu
   Methods,
   object
 >;
+
+export type Timestamps = {
+  created_at?: Date;
+  updated_at?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export type DerivedClassDocument<DerivedClass extends { schema: any }> = InferSchemaType<
+  ReturnType<DerivedClass['schema']>
+> &
+  Timestamps;
+export type DerivedClassMethods<DerivedClass> = ExtractMethods<DerivedClass>;
+export type DerivedClassStatics<DerivedClassConstructor> = ExtractMethods<DerivedClassConstructor>;
+export type DerivedClassModel<DerivedClass extends { schema: any }, DerivedClassConstructor> = Model<
+  DerivedClassDocument<DerivedClass>,
+  object,
+  DerivedClassMethods<DerivedClass>
+> &
+  DerivedClassStatics<DerivedClassConstructor>;

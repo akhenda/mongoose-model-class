@@ -23,9 +23,9 @@
 /// <reference types="mongoose/types/virtuals" />
 /// <reference types="mongoose/types/inferschematype" />
 import { Schema } from 'mongoose';
-import { DerivedClassModel, DocumentType } from '../types';
+import { DerivedClassModel, DerivedDocument } from '../types';
 import MongooseModelClass from '..';
-export declare class User extends MongooseModelClass {
+export declare class User extends MongooseModelClass<typeof User> {
     static getById(this: DerivedClassModel<User, typeof User>, id: string): Promise<import("mongoose").Document<unknown, any, import("..").DerivedClassDocument<User>> & {
         dob: Date;
         email: string;
@@ -40,9 +40,9 @@ export declare class User extends MongooseModelClass {
         address?: string | undefined;
         favouriteFood?: "chapati" | "rice" | "ugali" | "fish" | "mukimo" | undefined;
         lastName?: string | undefined;
-    } & import("..").Timestamps & {
+    } & import("..").Timestamps & User & {
         _id: import("mongoose").Types.ObjectId;
-    } & import("..").PickMatching<User, Function>>;
+    }>;
     options(): {};
     schema(): Schema<any, import("mongoose").Model<any, any, any, any, any>, {}, {}, {}, {}, "type", {
         dob: Date;
@@ -59,11 +59,11 @@ export declare class User extends MongooseModelClass {
         favouriteFood?: "chapati" | "rice" | "ugali" | "fish" | "mukimo" | undefined;
         lastName?: string | undefined;
     }>;
-    beforeSave(doc: DocumentType<User>, next: any): void;
-    afterSave(doc: DocumentType<User>, next: any): void;
+    beforeSave(doc: DerivedDocument<User>, next: any): void;
+    afterSave(doc: DerivedDocument<User>, next: any): void;
     get fullname(): string;
     set fullname(value: string);
-    signOff(this: DocumentType<User>): Promise<void>;
-    disable(this: DocumentType<User>): Promise<any>;
+    signOff(this: DerivedDocument<User>): Promise<void>;
+    disable(this: DerivedDocument<User>): Promise<any>;
 }
 //# sourceMappingURL=User.d.ts.map

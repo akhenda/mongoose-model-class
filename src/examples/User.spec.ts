@@ -30,7 +30,7 @@ afterAll(async () => {
 
 describe('Mongoose Model Class tests', () => {
   const user = new User();
-  const modelUser = user.build<typeof User>(mongoose, 'User');
+  const modelUser = user.build(mongoose, 'User');
 
   it('Should build model', async () => {
     expect(modelUser.name).toBe('model');
@@ -69,17 +69,13 @@ describe('Mongoose Model Class tests', () => {
     const newName = 'Hera Akhenda';
     const docUser = await modelUser.create(userData);
 
-    // @ts-ignore
     expect(docUser.fullname).toBe(originalName);
 
-    // @ts-ignore
     docUser.fullname = newName;
 
     await docUser.save();
 
-    // @ts-ignore
     expect(docUser.fullname).toBe(newName);
-
     expect(docUser.firstName).toBe('Hera');
     expect(docUser.lastName).toBe('Akhenda');
   });

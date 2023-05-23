@@ -30,41 +30,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
-const has_1 = __importDefault(require("lodash/has"));
 const mongoose_1 = __importStar(require("mongoose"));
-const util_1 = __importDefault(require("./util"));
-function setStaticMethods(target, schema) {
-    const o = target.constructor;
-    const properties = Object.getOwnPropertyNames(o);
-    properties.forEach((name) => {
-        const method = Object.getOwnPropertyDescriptor(o, name);
-        if (method && util_1.default.isStaticMethod(name))
-            schema.static(name, method.value);
-    });
-}
-function setInstanceMethods(target, schema) {
-    const o = target.constructor.prototype;
-    const properties = Object.getOwnPropertyNames(o);
-    properties.forEach((name) => {
-        const method = Object.getOwnPropertyDescriptor(o, name);
-        if (method && util_1.default.isInstanceMethod(name, method))
-            schema.method(name, method.value);
-    });
-}
-function setVirtualMethods(target, schema) {
-    const o = target.constructor.prototype;
-    const properties = Object.getOwnPropertyNames(o);
-    properties.forEach((name) => {
-        const method = Object.getOwnPropertyDescriptor(o, name);
-        if (method && util_1.default.isVirtualMethod(name, method)) {
-            const v = schema.virtual(name);
-            if ((0, has_1.default)(method, 'set') && method.set)
-                v.set(method.set);
-            if ((0, has_1.default)(method, 'get') && method.get)
-                v.get(method.get);
-        }
-    });
-}
 function setLifeCycleCallbacks(target, schema) {
     schema.pre('save', async function (next) {
         await target.beforeSave(this, next);
@@ -138,24 +104,6 @@ function setLifeCycleCallbacks(target, schema) {
             await target.afterAllFinds(doc, next);
         });
     }
-}
-function buildSchema(target) {
-    const schema = target.schema();
-    setStaticMethods(target, schema);
-    setInstanceMethods(target, schema);
-    setVirtualMethods(target, schema);
-    setLifeCycleCallbacks(target, schema);
-    target.config(schema);
-    return schema;
-}
-function buildModel(connection, plugins, name, target) {
-    const schema = buildSchema(target);
-    if (target.getIndexes().length > 0) {
-        target.getIndexes().forEach((index) => schema.index(index[0], index[1]));
-    }
-    if (plugins.length > 0)
-        plugins.forEach((plugin) => schema.plugin(plugin));
-    return connection.model(name, schema, target.options().collection);
 }
 class MongooseModelClass {
     constructor() {
@@ -249,7 +197,16 @@ class MongooseModelClass {
         return indices;
     }
     build(connection = mongoose_1.default, name = this.constructor.name) {
-        return buildModel(connection, this.mongoosePlugins, name, this);
+        const plugins = this.mongoosePlugins;
+        const schema = this.schema();
+        setLifeCycleCallbacks(this, schema);
+        schema.loadClass(this.constructor);
+        this.config(schema);
+        if (this.getIndexes().length > 0)
+            this.getIndexes().forEach((index) => schema.index(index[0], index[1]));
+        if (plugins.length > 0)
+            plugins.forEach((plugin) => schema.plugin(plugin));
+        return connection.model(name, schema, this.options().collection);
     }
 }
 Object.defineProperty(MongooseModelClass, 'adapter', {

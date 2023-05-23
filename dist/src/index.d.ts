@@ -1,6 +1,6 @@
 import mongoose, { CallbackWithoutResultAndOptionalError, DefaultTypeKey, IndexDefinition, Mongoose, PipelineStage, Schema, SchemaOptions } from 'mongoose';
 import { DerivedClassModel, MongoosePlugin } from './types';
-declare abstract class MongooseModelClass {
+declare abstract class MongooseModelClass<DerivedClassConstructor> {
     protected indexUpdatedAtField: boolean;
     protected indexes: {
         field: IndexDefinition;
@@ -33,7 +33,7 @@ declare abstract class MongooseModelClass {
     abstract options(): SchemaOptions<DefaultTypeKey>;
     config(schema: Schema): void;
     getIndexes(): [mongoose.IndexDefinition, mongoose.IndexOptions][];
-    build<DerivedClassConstructor>(connection?: Mongoose, name?: string): DerivedClassModel<this, DerivedClassConstructor>;
+    build(connection?: Mongoose, name?: string): DerivedClassModel<this, DerivedClassConstructor>;
 }
 export * from './types';
 export default MongooseModelClass;

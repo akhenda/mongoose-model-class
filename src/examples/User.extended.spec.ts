@@ -29,7 +29,7 @@ afterAll(async () => {
 
 describe('Mongoose Model Class Extended Tests', () => {
   const Model = new User();
-  const UserModel = Model.build<typeof User>(mongoose, 'User');
+  const UserModel = Model.build(mongoose, 'User');
 
   describe('Creating records', () => {
     it('saves a user', async () => {
@@ -57,7 +57,6 @@ describe('Mongoose Model Class Extended Tests', () => {
       // eslint-disable-next-line no-underscore-dangle
       const user = await UserModel.findOne({ _id: taya._id });
 
-      // @ts-ignore
       expect(user?.fullname).toBe('Taya Akhenda');
     });
   });

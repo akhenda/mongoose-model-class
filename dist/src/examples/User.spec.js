@@ -59,12 +59,9 @@ describe('Mongoose Model Class tests', () => {
         const originalName = 'Ernesto Rojas';
         const newName = 'Hera Akhenda';
         const docUser = await modelUser.create(userData);
-        // @ts-ignore
         expect(docUser.fullname).toBe(originalName);
-        // @ts-ignore
         docUser.fullname = newName;
         await docUser.save();
-        // @ts-ignore
         expect(docUser.fullname).toBe(newName);
         expect(docUser.firstName).toBe('Hera');
         expect(docUser.lastName).toBe('Akhenda');

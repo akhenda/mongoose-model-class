@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import { Schema } from 'mongoose';
 
-import { DerivedClassModel, DocumentType } from '../types';
+import { DerivedClassModel, DerivedDocument } from '../types';
 import MongooseModelClass from '..';
 
-export class User extends MongooseModelClass {
+export class User extends MongooseModelClass<typeof User> {
   static async getById(this: DerivedClassModel<User, typeof User>, id: string) {
     const user = await this.findById(id);
 
@@ -39,37 +39,37 @@ export class User extends MongooseModelClass {
     });
   }
 
-  beforeSave(doc: DocumentType<User>, next) {
+  beforeSave(doc: DerivedDocument<User>, next) {
     if (doc.password) doc.password = bcrypt.hashSync(doc.password, 10);
 
     next();
   }
 
-  afterSave(doc: DocumentType<User>, next): void {
+  afterSave(doc: DerivedDocument<User>, next): void {
     doc.likes += 1;
 
     next();
   }
 
   get fullname() {
-    const self = this as DocumentType<User>;
+    const self = this as DerivedDocument<User>;
 
     return `${self.firstName} ${self.lastName}`;
   }
 
   set fullname(value: string) {
-    const self = this as DocumentType<User>;
+    const self = this as DerivedDocument<User>;
     const [firstName, lastName] = value.split(' ');
 
     if (firstName) self.firstName = firstName;
     if (lastName) self.lastName = lastName;
   }
 
-  async signOff(this: DocumentType<User>) {
+  async signOff(this: DerivedDocument<User>) {
     await this.updateOne({ isOnline: false });
   }
 
-  async disable(this: DocumentType<User>) {
+  async disable(this: DerivedDocument<User>) {
     const result = await this.updateOne({ enabled: false });
 
     return result;

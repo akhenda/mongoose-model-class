@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import has from 'lodash/has';
 import mongoose, {
   CallbackWithoutResultAndOptionalError,
   DefaultTypeKey,
@@ -11,51 +10,9 @@ import mongoose, {
   SchemaOptions,
 } from 'mongoose';
 
-import { DerivedClassDocument, DerivedClassMethods, DerivedClassModel, MongoosePlugin } from './types';
-import Util from './util';
+import { DerivedClassModel, DerivedDocument, MongoosePlugin } from './types';
 
-function setStaticMethods<TSchema extends Schema, DerivedClass extends MongooseModelClass>(
-  target: DerivedClass,
-  schema: TSchema,
-) {
-  const o = target.constructor;
-  const properties = Object.getOwnPropertyNames(o);
-
-  properties.forEach((name) => {
-    const method = Object.getOwnPropertyDescriptor(o, name);
-
-    if (method && Util.isStaticMethod(name)) schema.static(name, method.value);
-  });
-}
-
-function setInstanceMethods<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
-  const o = target.constructor.prototype;
-  const properties = Object.getOwnPropertyNames(o);
-
-  properties.forEach((name) => {
-    const method = Object.getOwnPropertyDescriptor(o, name);
-
-    if (method && Util.isInstanceMethod(name, method)) schema.method(name, method.value);
-  });
-}
-
-function setVirtualMethods<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
-  const o = target.constructor.prototype;
-  const properties = Object.getOwnPropertyNames(o);
-
-  properties.forEach((name) => {
-    const method = Object.getOwnPropertyDescriptor(o, name);
-
-    if (method && Util.isVirtualMethod(name, method)) {
-      const v = schema.virtual(name);
-
-      if (has(method, 'set') && method.set) v.set(method.set);
-      if (has(method, 'get') && method.get) v.get(method.get);
-    }
-  });
-}
-
-function setLifeCycleCallbacks<TSchema extends Schema>(target: MongooseModelClass, schema: TSchema) {
+function setLifeCycleCallbacks<TSchema extends Schema>(target: MongooseModelClass<any>, schema: TSchema) {
   schema.pre('save', async function (next) {
     await target.beforeSave(this, next);
   });
@@ -132,45 +89,7 @@ function setLifeCycleCallbacks<TSchema extends Schema>(target: MongooseModelClas
   }
 }
 
-function buildSchema<DerivedClass extends MongooseModelClass>(target: DerivedClass) {
-  const schema = target.schema();
-
-  setStaticMethods<typeof schema, DerivedClass>(target, schema);
-  setInstanceMethods(target, schema);
-  setVirtualMethods(target, schema);
-  setLifeCycleCallbacks(target, schema);
-
-  target.config(schema);
-
-  return schema;
-}
-
-function buildModel<DerivedClassConstructor, DerivedClass extends MongooseModelClass>(
-  connection: Mongoose,
-  plugins: MongoosePlugin[],
-  name: string,
-  target: DerivedClass,
-) {
-  const schema = buildSchema<DerivedClass>(target) as unknown as Schema<
-    DerivedClassDocument<DerivedClass>,
-    DerivedClassModel<DerivedClass, DerivedClassConstructor>,
-    DerivedClassMethods<DerivedClass>
-  >;
-
-  if (target.getIndexes().length > 0) {
-    target.getIndexes().forEach((index) => schema.index(index[0], index[1]));
-  }
-
-  if (plugins.length > 0) plugins.forEach((plugin) => schema.plugin(plugin as any));
-
-  return connection.model<DerivedClassDocument<DerivedClass>, DerivedClassModel<DerivedClass, DerivedClassConstructor>>(
-    name,
-    schema,
-    target.options().collection,
-  );
-}
-
-abstract class MongooseModelClass {
+abstract class MongooseModelClass<DerivedClassConstructor> {
   protected indexUpdatedAtField = false;
 
   protected indexes: {
@@ -300,8 +219,24 @@ abstract class MongooseModelClass {
     return indices;
   }
 
-  build<DerivedClassConstructor>(connection: Mongoose = mongoose, name = this.constructor.name) {
-    return buildModel<DerivedClassConstructor, typeof this>(connection, this.mongoosePlugins, name, this);
+  build(connection: Mongoose = mongoose, name = this.constructor.name) {
+    const plugins = this.mongoosePlugins;
+    const schema = this.schema();
+
+    setLifeCycleCallbacks(this, schema);
+
+    schema.loadClass(this.constructor);
+
+    this.config(schema);
+
+    if (this.getIndexes().length > 0) this.getIndexes().forEach((index) => schema.index(index[0], index[1]));
+    if (plugins.length > 0) plugins.forEach((plugin) => schema.plugin(plugin as any));
+
+    return connection.model<DerivedDocument<this>, DerivedClassModel<this, DerivedClassConstructor>>(
+      name,
+      schema,
+      this.options().collection,
+    );
   }
 }
 

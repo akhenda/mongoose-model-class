@@ -48,7 +48,6 @@ describe('Mongoose Model Class Extended Tests', () => {
             const taya = await UserModel.create(userData);
             // eslint-disable-next-line no-underscore-dangle
             const user = await UserModel.findOne({ _id: taya._id });
-            // @ts-ignore
             expect(user?.fullname).toBe('Taya Akhenda');
         });
     });

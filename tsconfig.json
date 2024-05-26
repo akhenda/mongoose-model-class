@@ -1,0 +1,18 @@
+{
+  "extends": "@hendacorp/typescript-configs/node.library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      "*": ["*", "src/*"],
+      "@/*": ["./src/*"],
+      "src/*": ["./src/*"]
+    },
+    "noEmitHelpers": false,
+    "esModuleInterop": true,
+    "moduleResolution": "Node"
+  },
+  "files": ["global.d.ts", "modules.d.ts", "index.d.ts"],
+  "include": ["./src/**/*", "./tests/**/*", "src/**/*.ts", "src/**/*.js", "__tests__/**/*.ts"],
+  "exclude": ["node_modules", "<node_internals>/**", "tmp", "build", "dist"]
+}

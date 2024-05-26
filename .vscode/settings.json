@@ -1,0 +1,74 @@
+// these settings format all file types but js on save with the prettier vscode extension
+// for javascript/typescript, prettier is ran through eslint, and on save eslint --fix is ran
+// eslint errors are shown in the editor with the eslint vscode extension, the status is always shown
+{
+  "files.eol": "\n",
+  "editor.tabSize": 2,
+
+  "search.exclude": {
+    "yarn.lock": true,
+    "pnpm-lock.yaml": true
+  },
+
+  // Format all filetypes on save
+  "editor.formatOnSave": true,
+
+  // enable prettier as default formatter for all supported filetypes
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // always show eslint in the statusbar
+  "eslint.alwaysShowStatus": true,
+
+  // run eslint --fix on save
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // HTML specific settings
+  "[html]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // JavaScript specific settings
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Typescript specific settings
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // JSONC specific settings
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Other rules
+  "editor.wordWrap": "on",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // ESLint will not lint .vue, .ts or .tsx files in VSCode by default
+  // so enable linting for these files
+  // Also JSONC eslint plugin needs it
+  // https://github.com/ota-meshi/eslint-plugin-jsonc#visual-studio-code
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "vue",
+    "typescript",
+    "typescriptreact",
+    // "json"
+    // "jsonc"
+    "json5"
+  ],
+  "css.customData": [".vscode/css_custom_data.json"],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}

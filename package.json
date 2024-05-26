@@ -29,8 +29,8 @@
     "gc-ai": "git add . && bunx czg ai -N=5",
     "prebuild": "rimraf ./dist",
     "prebuild:types": "rimraf ./build",
-    "predoc:jsdoc": "rimraf ./docs",
-    "predoc:typedoc": "rimraf ./docs",
+    "predocs:jsdoc": "rimraf ./docs",
+    "predocs:typedoc": "rimraf ./docs",
     "start": "ts-node src/index.ts",
     "test": "jest --watch",
     "test:debug": "jest --runInBand --detectOpenHandles"

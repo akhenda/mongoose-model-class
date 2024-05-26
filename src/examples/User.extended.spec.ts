@@ -218,7 +218,7 @@ describe('User Extended + Caching', () => {
       );
     }
 
-    function getAllUsers(ttl?: number) {
+    function getAllUsers(ttl: number) {
       return UserModel.find({}).cache(ttl).exec();
     }
 

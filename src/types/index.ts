@@ -1,4 +1,12 @@
-import mongoose, { HydratedDocument, InferSchemaType, Model, Mongoose, RefType } from 'mongoose';
+import mongoose, {
+  CallbackWithoutResultAndOptionalError,
+  HydratedDocument,
+  InferSchemaType,
+  Model,
+  Mongoose,
+  RefType,
+  Schema,
+} from 'mongoose';
 
 export type MongoosePlugin = Mongoose['plugin'];
 export type DerivedConstructorFromInstanceType<T> = abstract new () => T;
@@ -11,6 +19,7 @@ export type Timestamps = {
 };
 
 export type MongooseModelClassTimestamps = Timestamps;
+export type MongooseModelClassHookNextFunction = CallbackWithoutResultAndOptionalError;
 
 /**
  * This type is for lint error "ban-types" where "{}" would be used
@@ -62,23 +71,25 @@ export type Ref<
 
 export type MongooseModelClassRef<T, U extends RefType> = Ref<T, U>;
 export type MongooseModelClassModel<
-  Schema,
-  Methods,
-  Virtuals,
-  Statics,
-  QueryHelpers = BeAnObject,
-  DocType = InferSchemaType<Schema> & MongooseModelClassTimestamps,
-  HDoc = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers>,
-> = Model<DocType, QueryHelpers, Methods, Virtuals, HDoc, Schema> & Statics;
+  TSchema,
+  TMethods,
+  TVirtuals,
+  TStatics,
+  TQueryHelpers = BeAnObject,
+  TOverrides = TVirtuals & TMethods,
+  DocType = InferSchemaType<TSchema> & MongooseModelClassTimestamps,
+  HDoc = HydratedDocument<DocType, TOverrides, TQueryHelpers>,
+> = Model<DocType, TQueryHelpers, TMethods, TVirtuals, HDoc, TSchema> & TStatics;
 
 export type MongooseModelClassDocumentType<
-  ModelClass extends { schema: any },
+  ModelClass extends { schema(): Schema },
   TSchema = ReturnType<ModelClass['schema']>,
-  DocType = InferSchemaType<TSchema>,
-  QueryHelpers = BeAnObject,
-  Methods = MongooseModelClassExtractMethods<ModelClass>,
-  Virtuals = MongooseModelClassExtractVirtuals<ModelClass>,
-> = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers> & DocType;
+  DocType = InferSchemaType<TSchema> & MongooseModelClassTimestamps,
+  TQueryHelpers = BeAnObject,
+  TMethods = MongooseModelClassExtractMethods<ModelClass>,
+  TVirtuals = MongooseModelClassExtractVirtuals<ModelClass>,
+  Overrides = TVirtuals & TMethods,
+> = HydratedDocument<DocType, Overrides, TQueryHelpers> & DocType;
 
 // export type ModelType<
 //   T extends AnyParamConstructor<any>,
@@ -99,20 +110,20 @@ export type MongooseModelClassDocumentType<
 //   Statics;
 
 export type MongooseModelClassModelType<
-  ModelClass extends { schema: any },
-  QueryHelpers = BeAnObject,
-  Statics = BeAnObject,
-  Virtuals = MongooseModelClassExtractVirtuals<ModelClass>,
-  Methods = MongooseModelClassExtractMethods<ModelClass>,
+  ModelClass extends { schema(): Schema },
+  TQueryHelpers = BeAnObject,
+  TStatics = BeAnObject,
+  TVirtuals = MongooseModelClassExtractVirtuals<ModelClass>,
+  TMethods = MongooseModelClassExtractMethods<ModelClass>,
   TSchema = ReturnType<ModelClass['schema']>,
   DocType = InferSchemaType<TSchema> & MongooseModelClassTimestamps,
-  HDoc = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers>,
-> = Model<DocType, QueryHelpers, Methods, Virtuals, HDoc, TSchema> & Statics;
+  HDoc = HydratedDocument<DocType, TVirtuals & TMethods, TQueryHelpers>,
+> = Model<DocType, TQueryHelpers, TMethods, TVirtuals, HDoc, TSchema> & TStatics;
 
 export type MongooseModelClassReturnModelType<
   T extends AnyParamConstructor<any>,
-  QueryHelpers = BeAnObject,
-  Statics = MongooseModelClassExtractStatics<T>,
-  Virtuals = MongooseModelClassExtractVirtuals<InstanceType<T>>,
-  Methods = MongooseModelClassExtractMethods<InstanceType<T>>,
-> = MongooseModelClassModelType<InstanceType<T>, QueryHelpers, Statics, Virtuals, Methods>;
+  TQueryHelpers = BeAnObject,
+  TStatics = MongooseModelClassExtractStatics<T>,
+  TVirtuals = MongooseModelClassExtractVirtuals<InstanceType<T>>,
+  TMethods = MongooseModelClassExtractMethods<InstanceType<T>>,
+> = MongooseModelClassModelType<InstanceType<T>, TQueryHelpers, TStatics, TVirtuals, TMethods>;

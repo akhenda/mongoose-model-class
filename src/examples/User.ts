@@ -44,26 +44,26 @@ export class User extends BaseModel<typeof User> {
     });
   }
 
-  beforeSave(this: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError) {
+  beforeSave(this: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError) {
     if (this.password) this.password = bcrypt.hashSync(this.password, 10);
 
     next();
   }
 
-  afterSave(doc: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError): void {
+  afterSave(doc: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError): void {
     doc.likes += 1;
 
     next();
   }
 
   get fullname() {
-    const that = this as MongooseModelClassDocumentType<this>;
+    const that = this as MongooseModelClassDocumentType<User>;
 
     return `${that.firstName} ${that.lastName}`;
   }
 
   set fullname(value: string) {
-    const that = this as MongooseModelClassDocumentType<this>;
+    const that = this as MongooseModelClassDocumentType<User>;
     const [firstName, lastName] = value.split(' ');
 
     if (firstName) that.firstName = firstName;
@@ -73,14 +73,14 @@ export class User extends BaseModel<typeof User> {
   /**
    * This signs off/out a user
    */
-  async signOff(this: MongooseModelClassDocumentType<this>) {
+  async signOff(this: MongooseModelClassDocumentType<User>) {
     await this.updateOne({ isOnline: false });
   }
 
   /**
    * This disables a user account
    */
-  async disable(this: MongooseModelClassDocumentType<this>) {
+  async disable(this: MongooseModelClassDocumentType<User>) {
     const result = await this.updateOne({ enabled: false, status: 'disabled' });
 
     return result;

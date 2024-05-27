@@ -48,7 +48,7 @@ abstract class MongooseModelClass<DerivedClassConstructor> extends MongooseModel
 
   buildModel<
     T extends Schema = ReturnType<this['schema']>,
-    DocType = InferSchemaType<T>,
+    DocType = InferSchemaType<T> & { created_at: Date },
     QueryHelpers = BeAnObject,
     Methods = MongooseModelClassExtractMethods<this>,
     Statics = MongooseModelClassExtractMethods<DerivedClassConstructor>,

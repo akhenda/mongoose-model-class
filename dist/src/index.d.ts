@@ -65,7 +65,9 @@ declare abstract class MongooseModelClass<DerivedClassConstructor> extends Mongo
     abstract schema(): Schema;
     options(): SchemaOptions;
     getIndexes(): [mongoose.IndexDefinition, mongoose.IndexOptions][];
-    buildModel<T extends Schema = ReturnType<this['schema']>, DocType = InferSchemaType<T>, QueryHelpers = BeAnObject, Methods = MongooseModelClassExtractMethods<this>, Statics = MongooseModelClassExtractMethods<DerivedClassConstructor>, Virtuals = MongooseModelClassExtractVirtuals<this>, TModel = MongooseModelClassModel<T, Methods, Virtuals, QueryHelpers> & Statics>(name?: string, connection?: Mongoose): TModel;
+    buildModel<T extends Schema = ReturnType<this['schema']>, DocType = InferSchemaType<T> & {
+        created_at: Date;
+    }, QueryHelpers = BeAnObject, Methods = MongooseModelClassExtractMethods<this>, Statics = MongooseModelClassExtractMethods<DerivedClassConstructor>, Virtuals = MongooseModelClassExtractVirtuals<this>, TModel = MongooseModelClassModel<T, Methods, Virtuals, QueryHelpers> & Statics>(name?: string, connection?: Mongoose): TModel;
 }
 export * from './types';
 export default MongooseModelClass;

@@ -1,7 +1,16 @@
-import mongoose, { HydratedDocument, InferSchemaType, Model, Mongoose } from 'mongoose';
+import mongoose, { HydratedDocument, InferSchemaType, Model, Mongoose, RefType } from 'mongoose';
 
 export type MongoosePlugin = Mongoose['plugin'];
 export type DerivedConstructorFromInstanceType<T> = abstract new () => T;
+
+export type Timestamps = {
+  created_at: Date;
+  updated_at: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+export type MongooseModelClassTimestamps = Timestamps;
 
 /**
  * This type is for lint error "ban-types" where "{}" would be used
@@ -46,22 +55,19 @@ export type MongooseModelClassExtractStatics<T extends AnyParamConstructor<any>>
  */
 export type Ref<
   PopulatedType,
-  RawId extends mongoose.RefType =
-    | (PopulatedType extends {
-        _id?: mongoose.RefType;
-      }
-        ? NonNullable<PopulatedType['_id']>
-        : mongoose.Types.ObjectId)
+  RawId extends RefType =
+    | (PopulatedType extends { _id?: RefType } ? NonNullable<PopulatedType['_id']> : mongoose.Types.ObjectId)
     | undefined,
 > = mongoose.PopulatedDoc<PopulatedType, RawId>;
 
+export type MongooseModelClassRef<T, U extends RefType> = Ref<T, U>;
 export type MongooseModelClassModel<
   Schema,
   Methods,
   Virtuals,
   Statics,
   QueryHelpers = BeAnObject,
-  DocType = InferSchemaType<Schema>,
+  DocType = InferSchemaType<Schema> & MongooseModelClassTimestamps,
   HDoc = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers>,
 > = Model<DocType, QueryHelpers, Methods, Virtuals, HDoc, Schema> & Statics;
 
@@ -99,7 +105,7 @@ export type MongooseModelClassModelType<
   Virtuals = MongooseModelClassExtractVirtuals<ModelClass>,
   Methods = MongooseModelClassExtractMethods<ModelClass>,
   TSchema = ReturnType<ModelClass['schema']>,
-  DocType = InferSchemaType<TSchema>,
+  DocType = InferSchemaType<TSchema> & MongooseModelClassTimestamps,
   HDoc = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers>,
 > = Model<DocType, QueryHelpers, Methods, Virtuals, HDoc, TSchema> & Statics;
 

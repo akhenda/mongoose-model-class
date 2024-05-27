@@ -76,9 +76,9 @@ describe('User', () => {
       const docUser3 = await modelUser.getById(docUser.id);
 
       expect(docUser3).toBeDefined();
-      expect(docUser3?.enabled).toBeFalse();
-      expect(docUser3?.isOnline).toBeFalse();
-      expect(docUser3?.status).toBe('disabled');
+      expect(docUser3.enabled).toBeFalse();
+      expect(docUser3.isOnline).toBeFalse();
+      expect(docUser3.status).toBe('disabled');
     });
 
     it('calls virtual methods', async () => {

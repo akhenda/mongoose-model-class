@@ -47,9 +47,7 @@
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
     "noImplicitThis": true,
-    "alwaysStrict": true,
-
-    "preserveSymlinks": false
+    "alwaysStrict": true
   },
   "files": ["global.d.ts", "modules.d.ts", "./src/types/mongoose.ts"],
   "include": ["./src/**/*", "./tests/**/*", "src/**/*.ts", "src/**/*.js", "__tests__/**/*.ts"],

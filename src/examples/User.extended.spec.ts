@@ -72,7 +72,7 @@ describe('User Extended', () => {
         const user = await UserModel.getById(taya._id);
 
         expect(user).toBeDefined();
-        expect(user?.likes).toBe(10);
+        expect(user.likes).toBe(10);
       });
     });
 
@@ -245,6 +245,7 @@ describe('User Extended + Caching', () => {
     });
 
     it('have cache method after initialization', () => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(UserModel.find({}).cache).toBeFunction();
     });
 

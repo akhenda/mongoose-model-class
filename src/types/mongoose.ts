@@ -20,12 +20,19 @@ declare module 'mongoose' {
     // [customLabel: string]: T[] | number | boolean | null | undefined;
   }
 
+  type MongooseModelClassTimestamps = {
+    created_at: globalThis.Date;
+    updated_at: globalThis.Date;
+    createdAt?: globalThis.Date;
+    updatedAt?: globalThis.Date;
+  };
+
   interface MongooseModelClassModel<
     T extends Schema,
     Methods = {},
     Virtuals = {},
     QueryHelpers = {},
-    DocType = InferSchemaType<T>,
+    DocType = InferSchemaType<T> & MongooseModelClassTimestamps,
     HDoc = HydratedDocument<DocType, Virtuals & Methods, QueryHelpers>,
   > extends Model<DocType, QueryHelpers, Methods, Virtuals, HDoc, Schema> {
     aggregatePaginate<UserType = DocType>(
@@ -46,25 +53,20 @@ declare module 'mongoose' {
    * ==============================================
    */
 
-  interface Query<
-    ResultType,
-    DocType,
-    THelpers = {},
-    RawDocType = DocType,
-    QueryOp = 'find',
-    TInstanceMethods = Record<string, never>,
-  > {
+  interface Query<ResultType, DocType> {
     cache(ttl: number, customKey?: string): this;
     cache(customKey: string): this;
     setDerivedKey(derivedKey: string): this;
     cacheGetScript(sha: string, ...args: any): this;
     postCacheSetScript(sha: string, ...args: any): this;
     postCacheSetDeriveLastArg(derivedKey: string): this;
+    dummyGenericHolder(a?: ResultType, b?: DocType): this;
   }
 
   interface Aggregate<ResultType> {
     cache(ttl: number, customKey?: string): this;
     cache(customKey: string): this;
+    dummyGenericHolder(a?: ResultType): this;
   }
 
   interface DocumentQuery<T, DocType extends Document, QueryHelpers = {}> {
@@ -73,6 +75,7 @@ declare module 'mongoose' {
     // eslint-disable-next-line @typescript-eslint/unified-signatures
     cache(ttl: number, customKey: string): this;
     cache(customKey: string): this;
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
     cache(ttl: number): this;
   }
 }

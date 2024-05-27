@@ -73,7 +73,7 @@ export declare class User extends BaseModel<typeof User> {
         address?: string | null | undefined;
         favouriteFood?: "chapati" | "rice" | "ugali" | "fish" | "mukimo" | null | undefined;
         lastName?: string | null | undefined;
-    }> & Omit<{
+    } & import("../types").Timestamps> & Omit<{
         dob: Date;
         email: string;
         enabled: boolean;
@@ -87,7 +87,7 @@ export declare class User extends BaseModel<typeof User> {
         address?: string | null | undefined;
         favouriteFood?: "chapati" | "rice" | "ugali" | "fish" | "mukimo" | null | undefined;
         lastName?: string | null | undefined;
-    } & {
+    } & import("../types").Timestamps & {
         _id: mongoose.Types.ObjectId;
     }, "schema" | "options" | "getIndexes" | "buildModel" | "setStaticMethods" | "setInstanceMethods" | "setVirtualMethods" | "beforeSave" | "afterSave" | "build" | "signOff" | "disable" | ("timestamps" | "collectionName" | "indexUpdatedAtField" | "mongoosePlugins" | "fullname" | undefined)> & import("../types").MongooseModelClassExtractVirtuals<User> & import("../types").MongooseModelClassPickMatching<User, Function>>;
     schema(): mongoose.Schema<any, mongoose.Model<any, any, any, any, any, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, {
@@ -135,17 +135,17 @@ export declare class User extends BaseModel<typeof User> {
     }> & {
         _id: mongoose.Types.ObjectId;
     }>;
-    beforeSave(this: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError): void;
-    afterSave(doc: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError): void;
+    beforeSave(this: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError): void;
+    afterSave(doc: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError): void;
     get fullname(): string;
     set fullname(value: string);
     /**
      * This signs off/out a user
      */
-    signOff(this: MongooseModelClassDocumentType<User>): Promise<void>;
+    signOff(this: MongooseModelClassDocumentType<this>): Promise<void>;
     /**
      * This disables a user account
      */
-    disable(this: MongooseModelClassDocumentType<User>): Promise<any>;
+    disable(this: MongooseModelClassDocumentType<this>): Promise<any>;
 }
 //# sourceMappingURL=User.d.ts.map

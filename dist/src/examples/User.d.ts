@@ -135,17 +135,17 @@ export declare class User extends BaseModel<typeof User> {
     }> & {
         _id: mongoose.Types.ObjectId;
     }>;
-    beforeSave(this: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError): void;
-    afterSave(doc: MongooseModelClassDocumentType<this>, next: CallbackWithoutResultAndOptionalError): void;
+    beforeSave(this: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError): void;
+    afterSave(doc: MongooseModelClassDocumentType<User>, next: CallbackWithoutResultAndOptionalError): void;
     get fullname(): string;
     set fullname(value: string);
     /**
      * This signs off/out a user
      */
-    signOff(this: MongooseModelClassDocumentType<this>): Promise<void>;
+    signOff(this: MongooseModelClassDocumentType<User>): Promise<void>;
     /**
      * This disables a user account
      */
-    disable(this: MongooseModelClassDocumentType<this>): Promise<any>;
+    disable(this: MongooseModelClassDocumentType<User>): Promise<any>;
 }
 //# sourceMappingURL=User.d.ts.map

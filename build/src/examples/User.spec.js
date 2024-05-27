@@ -71,9 +71,9 @@ describe('User', () => {
             yield (docUser2 === null || docUser2 === void 0 ? void 0 : docUser2.signOff());
             const docUser3 = yield modelUser.getById(docUser.id);
             expect(docUser3).toBeDefined();
-            expect(docUser3 === null || docUser3 === void 0 ? void 0 : docUser3.enabled).toBeFalse();
-            expect(docUser3 === null || docUser3 === void 0 ? void 0 : docUser3.isOnline).toBeFalse();
-            expect(docUser3 === null || docUser3 === void 0 ? void 0 : docUser3.status).toBe('disabled');
+            expect(docUser3.enabled).toBeFalse();
+            expect(docUser3.isOnline).toBeFalse();
+            expect(docUser3.status).toBe('disabled');
         }));
         it('calls virtual methods', () => __awaiter(void 0, void 0, void 0, function* () {
             const originalName = 'Ernesto Rojas';

@@ -70,7 +70,7 @@ describe('User Extended', () => {
                 yield UserModel.updateOne({ _id: taya._id }, { $inc: { likes: 10 } });
                 const user = yield UserModel.getById(taya._id);
                 expect(user).toBeDefined();
-                expect(user === null || user === void 0 ? void 0 : user.likes).toBe(10);
+                expect(user.likes).toBe(10);
             }));
         });
         describe('Deleting records', () => {
@@ -207,6 +207,7 @@ describe('User Extended + Caching', () => {
             expect(() => (0, recachegoose_1.default)(mongoose_1.default, {})).toBeFunction();
         });
         it('have cache method after initialization', () => {
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(UserModel.find({}).cache).toBeFunction();
         });
         it('caches a simple query that uses promises', () => __awaiter(void 0, void 0, void 0, function* () {
